@@ -20,20 +20,19 @@ class MainWindow(QMainWindow):
 
         self.ui.action.triggered.connect(self.onActionTriggered)
 
+        self.ui.tableWidget.itemChanged.connect(self.updateDatabase)
+
         self.ui.pushButton.clicked.connect(self.insertDatabase)
         self.ui.pushButton_2.clicked.connect(self.deleteDatabase)
 
         self.table = self.ui.tableWidget
+        self.table.setColumnCount(4)
 
         self.mydb = self.connect_database()
         self.showDatabase()
 
     def onActionTriggered(self):
         print(f'onActionTriggered')
-
-    def onTableWidgetItemChanged(self,item):
-        if item.row() == 1 and item.column() == 1:
-            print("Cell 1,1 Changes")
 
     def connect_database(self):
         try:
@@ -52,44 +51,50 @@ class MainWindow(QMainWindow):
         cursor = self.mydb.cursor()
         cursor.execute("SELECT * FROM discipline")
         result = cursor.fetchall()
-        self.table.setColumnCount(4)
-        print(result)
+        self.table.setRowCount(0)
         for row_number, row_data in enumerate(result):
             self.table.insertRow(row_number)
-
             for column_number, data in enumerate(row_data):
                  self.table.setItem(row_number, column_number, QTableWidgetItem(str(data)))
+        cursor.close()
 
 
     def insertDatabase(self):
         cursor = self.mydb.cursor()
-        query = "INSERT INTO discipline (Name, QuantityAcademicHour, Description) VALUES (%s, %s, %s)"
-        value = ("", "0", "")
-        cursor.execute(query, value)
-        self.mydb.commit()
-        self.showDatabase()
-
-
-    def updateDatabase(self):
-        cursor = self.mydb.cursor()
-        name = self.lineEdit.text()
-        quantituAcademicHour = self.lineEdit_2.text()
-        description = self.textEdit.toPlainText()
-        id=1
-
-        query = "UPDATE discipline SET (Name, QuantityAcademicHour, Description) = (%s, %s, %s) WHERE id = %s"
-        value = (name, quantituAcademicHour, description, id)
-
-        cursor.execute(query, value)
-
-        self.mydb.commit()
-
-    def deleteDatabase(self):
-        cursor = self.mydb.cursor()
-        query = "DELETE FROM discipline"
+        query = "INSERT INTO discipline (Name, QuantityAcademicHour, Description) VALUES ('', 0, '')"
         cursor.execute(query)
         self.mydb.commit()
         self.showDatabase()
+        cursor.close()
+
+    def updateDatabase(self):
+        selectedItems = self.table.selectedItems()
+        if selectedItems:
+            selectedRow = selectedItems[0].row()
+            cursor = self.mydb.cursor()
+            unique_identifier = int(self.table.item(selectedRow, 0).text())
+            query = "UPDATE discipline SET Name=%s, QuantityAcademicHour=%s, Description=%s WHERE IDD=%s"
+            value = (self.table.item(selectedRow, 1).text(),
+                    int(self.table.item(selectedRow, 2).text()),
+                    self.table.item(selectedRow, 3).text(),
+                    unique_identifier)
+            cursor.execute(query, value)
+            self.mydb.commit()
+            cursor.close()
+            self.showDatabase()
+
+    def deleteDatabase(self):
+        selectedItems = self.table.selectedItems()
+        if selectedItems:
+            selectedRow = selectedItems[0].row()
+            cursor = self.mydb.cursor()
+            unique_identifier = int(self.table.item(selectedRow, 0).text())
+            query = "DELETE FROM discipline WHERE IDD=%s"
+            value = (unique_identifier,)
+            cursor.execute(query, value)
+            self.mydb.commit()
+            cursor.close()
+            self.showDatabase()
 
 
 class AnotherWindow(QWidget):
