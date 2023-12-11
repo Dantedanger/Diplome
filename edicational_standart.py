@@ -1,25 +1,18 @@
 import sys
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QLineEdit, QTextEdit, QTableWidget, QTableWidgetItem, QHeaderView,QDialog, QAbstractItemView
+from PySide6.QtWidgets import QApplication, QMainWindow, QDialog, QLineEdit, QTextEdit, QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import Qt
 import mysql.connector as mc
 
-# Important:
-# You need to run the following command to generate the ui_form.py file
-#     pyside6-uic form.ui -o ui_form.py, or
-#     pyside6-uic D:\QtProjects\Diplom\form.ui -o D:\QtProjects\Diplom\ui_form.py
-#     pyside6-uic D:\QtProjects\Diplom\discipline.ui -o D:\QtProjects\Diplom\ui_discipline.py
-#     pyside2-uic form.ui -o ui_form.py
-
 QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
 
-class Discipline(QDialog):
+class Edicational_standart(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         loader = QUiLoader()
-        loader.registerCustomWidget(Discipline)
-        self.ui = loader.load('discipline.ui', self)
+        loader.registerCustomWidget(Edicational_standart)
+        self.ui = loader.load('edicational_standart.ui', self)
 
         self.ui.tableWidget.itemChanged.connect(self.updateDatabase)
 
@@ -32,7 +25,7 @@ class Discipline(QDialog):
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        column_labels = ["","Название", "Кол-во часов", "Описание"]
+        column_labels = ["","Код направления подготовки", "Название", "Сроки получения образования"]
         self.table.setHorizontalHeaderLabels(column_labels)
 
         self.mydb = self.connect_database()
@@ -53,7 +46,7 @@ class Discipline(QDialog):
 
     def showDatabase(self):
         cursor = self.mydb.cursor()
-        cursor.execute("SELECT * FROM discipline")
+        cursor.execute("SELECT * FROM edicational_standart")
         result = cursor.fetchall()
         self.table.setRowCount(0)
         for row_number, row_data in enumerate(result):
@@ -65,7 +58,7 @@ class Discipline(QDialog):
 
     def insertDatabase(self):
         cursor = self.mydb.cursor()
-        query = "INSERT INTO discipline (Name, QuantityAcademicHour, Description) VALUES ('', 0, '')"
+        query = "INSERT INTO edicational_standart (Specialization_code, Name, Time) VALUES ('', '', '')"
         cursor.execute(query)
         self.mydb.commit()
         self.showDatabase()
@@ -77,9 +70,9 @@ class Discipline(QDialog):
             selectedRow = selectedItems[0].row()
             cursor = self.mydb.cursor()
             unique_identifier = int(self.table.item(selectedRow, 0).text())
-            query = "UPDATE discipline SET Name=%s, QuantityAcademicHour=%s, Description=%s WHERE IDD=%s"
+            query = "UPDATE edicational_standart SET Specialization_code=%s, Name=%s, Time=%s WHERE IDEdSt=%s"
             value = (self.table.item(selectedRow, 1).text(),
-                    int(self.table.item(selectedRow, 2).text()),
+                    self.table.item(selectedRow, 2).text(),
                     self.table.item(selectedRow, 3).text(),
                     unique_identifier)
             cursor.execute(query, value)
@@ -92,7 +85,7 @@ class Discipline(QDialog):
             selectedRow = selectedItems[0].row()
             cursor = self.mydb.cursor()
             unique_identifier = int(self.table.item(selectedRow, 0).text())
-            query = "DELETE FROM discipline WHERE IDD=%s"
+            query = "DELETE FROM edicational_standart WHERE IDEdSt=%s"
             value = (unique_identifier,)
             cursor.execute(query, value)
             self.mydb.commit()
@@ -101,6 +94,6 @@ class Discipline(QDialog):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    widget = Discipline()
+    widget = Edicational_standart()
     widget.show()
     sys.exit(app.exec())

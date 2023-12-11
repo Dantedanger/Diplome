@@ -1,6 +1,6 @@
 import sys
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QLineEdit, QTextEdit, QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QLineEdit, QTextEdit, QTableWidget, QTableWidgetItem, QHeaderView, QDialog, QAbstractItemView
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import Qt
 import mysql.connector as mc
@@ -8,15 +8,11 @@ import mysql.connector as mc
 # Important:
 # You need to run the following command to generate the ui_form.py file
 #     pyside6-uic form.ui -o ui_form.py, or
-#     pyside6-uic D:\QtProjects\Diplom\form.ui -o D:\QtProjects\Diplom\ui_form.py
-#     pyside6-uic D:\QtProjects\Diplom\discipline.ui -o D:\QtProjects\Diplom\ui_discipline.py
-#     pyside6-uic D:\QtProjects\Diplom\competence.ui -o D:\QtProjects\Diplom\ui_competence.py
 #     pyside2-uic form.ui -o ui_form.py
 
-from ui_form import QWidget
 QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
 
-class Competence(QWidget):
+class Competence(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         loader = QUiLoader()
@@ -87,7 +83,6 @@ class Competence(QWidget):
             cursor.execute(query, value)
             self.mydb.commit()
             cursor.close()
-            self.showDatabase()
 
     def deleteDatabase(self):
         selectedItems = self.table.selectedItems()
@@ -106,3 +101,4 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     widget = Competence()
     widget.show()
+    sys.exit(app.exec())
