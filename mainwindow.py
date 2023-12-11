@@ -9,11 +9,15 @@ import mysql.connector as mc
 #     pyside6-uic D:\QtProjects\Diplom\discipline.ui -o D:\QtProjects\Diplom\ui_discipline.py
 #     pyside6-uic D:\QtProjects\Diplom\competence.ui -o D:\QtProjects\Diplom\ui_competence.py
 #     pyside6-uic D:\QtProjects\Diplom\edicational_standart.ui -o D:\QtProjects\Diplom\ui_edicational_standart.py
+#     pyside6-uic D:\QtProjects\Diplom\desciplinecompetence.ui -o D:\QtProjects\Diplom\ui_desciplinecompetence.py
+#     pyside6-uic D:\QtProjects\Diplom\desciplinecompetenceadd.ui -o D:\QtProjects\Diplom\ui_desciplinecompetenceadd.py
+#     pyside6-uic D:\QtProjects\Diplom\desciplinecompetenceupdate.ui -o D:\QtProjects\Diplom\ui_desciplinecompetenceupdate.py
 
 from ui_form import Ui_MainWindow
 from discipline import Discipline
 from competence import Competence
 from edicational_standart import Edicational_standart
+from desciplinecompetence import DesciplineCompetence
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
@@ -24,6 +28,7 @@ class MainWindow(QMainWindow):
 
         self.ui.action.triggered.connect(self.onActionTriggered)
         self.ui.action_3.triggered.connect(self.onAction_3Triggered)
+        self.ui.action_4.triggered.connect(self.onAction_4Triggered)
         self.ui.action_5.triggered.connect(self.onAction_5Triggered)
 
     def onActionTriggered(self):
@@ -34,6 +39,11 @@ class MainWindow(QMainWindow):
     def onAction_3Triggered(self):
         self.competence_widget = Competence()
         self.competence_widget.setWindowTitle("Компетенции")
+        self.competence_widget.exec()
+
+    def onAction_4Triggered(self):
+        self.competence_widget = DesciplineCompetence()
+        self.competence_widget.setWindowTitle("Компетенции и дисциплины")
         self.competence_widget.exec()
 
     def onAction_5Triggered(self):
