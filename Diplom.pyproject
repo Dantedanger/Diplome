@@ -1,3 +1,3 @@
 {
-    "files": ["mainwindow.py","competence.ui","edicational_standart.ui","desciplinecompetenceadd.ui","competence.py","form.ui","desciplinecompetence.py","desciplinecompetence.ui","edicational_standart.py","desciplinecompetenceupdate.ui","discipline.ui","discipline.py"]
+    "files": ["form.ui","mainwindow.py","edicational_standart.ui","desciplinecompetenceupdate.ui","discipline.ui","desciplinecompetence.py","desciplinecompetence.ui","edicational_standart.py","discipline.py","competence.ui","desciplinecompetenceadd.ui","competence.py","educational_program.py","educational_program.ui","educational_programadd.ui","educational_programupdate.ui"]
 }
