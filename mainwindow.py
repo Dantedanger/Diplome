@@ -15,6 +15,10 @@ import mysql.connector as mc
 #     pyside6-uic D:\QtProjects\Diplom\educational_program.ui -o D:\QtProjects\Diplom\ui_educational_program.py
 #     pyside6-uic D:\QtProjects\Diplom\educational_programadd.ui -o D:\QtProjects\Diplom\ui_deducational_programadd.py
 #     pyside6-uic D:\QtProjects\Diplom\educational_programupdate.ui -o D:\QtProjects\Diplom\ui_educational_programupdate.py
+#     pyside6-uic D:\QtProjects\Diplom\syllibusdiscipline.ui -o D:\QtProjects\Diplom\ui_syllibusdiscipline.py
+#     pyside6-uic D:\QtProjects\Diplom\syllibusdisciplineadd.ui -o D:\QtProjects\Diplom\ui_syllibusdisciplineadd.py
+#     pyside6-uic D:\QtProjects\Diplom\syllibusdisciplineupdate.ui -o D:\QtProjects\Diplom\ui_syllibusdisciplineupdate.py
+
 
 from ui_form import Ui_MainWindow
 from discipline import Discipline
@@ -22,6 +26,7 @@ from competence import Competence
 from edicational_standart import Edicational_standart
 from desciplinecompetence import DesciplineCompetence
 from educational_program import Educational_program
+from syllibusdiscipline import SyllibusDiscipline
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
@@ -31,6 +36,7 @@ class MainWindow(QMainWindow):
         self.ui.setupUi(self)
 
         self.ui.action.triggered.connect(self.onActionTriggered)
+        self.ui.action_2.triggered.connect(self.onAction_2Triggered)
         self.ui.action_3.triggered.connect(self.onAction_3Triggered)
         self.ui.action_4.triggered.connect(self.onAction_4Triggered)
         self.ui.action_5.triggered.connect(self.onAction_5Triggered)
@@ -39,6 +45,11 @@ class MainWindow(QMainWindow):
     def onActionTriggered(self):
         self.discipline_widget = Discipline()
         self.discipline_widget.setWindowTitle("Дисциплины")
+        self.discipline_widget.exec()
+
+    def onAction_2Triggered(self):
+        self.discipline_widget = SyllibusDiscipline()
+        self.discipline_widget.setWindowTitle("Дисциплины учебного плана")
         self.discipline_widget.exec()
 
     def onAction_3Triggered(self):
