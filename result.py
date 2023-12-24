@@ -6,22 +6,17 @@ from PySide6.QtCore import Qt, QFile
 
 import mysql.connector as mc
 
-# Important:
-# You need to run the following command to generate the ui_form.py file
-#     pyside6-uic form.ui -o ui_form.py, or
-#     pyside2-uic form.ui -o ui_form.py
-
 QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
 
-class DesciplineCompetence(QDialog):
+class Result(QDialog):
     def __init__(self, mydb):
         super().__init__()
         loader = QUiLoader()
-        loader.registerCustomWidget(DesciplineCompetence)
-        self.ui = loader.load('desciplinecompetence.ui', self)
+        loader.registerCustomWidget(Result)
+        self.ui = loader.load('result.ui', self)
 
         loader = QUiLoader()
-        ui_file_path_add = "desciplinecompetenceadd.ui"
+        ui_file_path_add = "resultadd.ui"
         ui_add = QFile(ui_file_path_add)
         if ui_add.open(QFile.ReadOnly):
             self.ui_add = loader.load(ui_add, self)
@@ -30,7 +25,7 @@ class DesciplineCompetence(QDialog):
 
 
         loader = QUiLoader()
-        ui_file_path_update = "desciplinecompetenceupdate.ui"
+        ui_file_path_update = "resultupdate.ui"
         ui_update = QFile(ui_file_path_update)
         if ui_update.open(QFile.ReadOnly):
             self.ui_update = loader.load(ui_update, self)
@@ -46,16 +41,17 @@ class DesciplineCompetence(QDialog):
         self.ui.pushButton.clicked.connect(self.startInsertDatabase)
         self.ui.pushButton_3.clicked.connect(self.startUpdateDatabase)
         self.ui.pushButton_2.clicked.connect(self.deleteDatabase)
+        self.ui.pushButton_4.clicked.connect(self.getResult)
 
         self.table = self.ui.tableWidget
-        self.table.setColumnCount(5)
+        self.table.setColumnCount(9)
         self.table.setColumnHidden(0, True)
         self.table.setColumnHidden(1, True)
         self.table.setColumnHidden(2, True)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        column_labels = ["","","", "Название дисциплины", "Компетенции"]
+        column_labels = ["","","", "Название дисциплины 1", "Предметная область", "Название дисциплины 2", "Предметная область","Связь","Описание"]
         self.table.setHorizontalHeaderLabels(column_labels)
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
 
@@ -64,7 +60,7 @@ class DesciplineCompetence(QDialog):
 
     def showDatabase(self):
         cursor = self.mydb.cursor()
-        cursor.execute("SELECT * FROM descipline_competence_view")
+        cursor.execute("SELECT * FROM result_view")
         result = cursor.fetchall()
         self.table.setRowCount(0)
         for row_number, row_data in enumerate(result):
@@ -98,7 +94,7 @@ class DesciplineCompetence(QDialog):
     def populate_combobox_2(self,x:QWidget):
         x.comboBox_2.clear()
         cursor = self.mydb.cursor()
-        query = "SELECT IDC, Name FROM competence"
+        query = "SELECT IDD, Name FROM discipline"
         cursor.execute(query)
         results = cursor.fetchall()
         for row in results:
@@ -108,16 +104,16 @@ class DesciplineCompetence(QDialog):
         if (x==self.ui_update):
             selectedItems = self.table.selectedItems()
             if (selectedItems):
-                x.comboBox_2.setCurrentText(selectedItems[1].text())
+                x.comboBox_2.setCurrentText(selectedItems[2].text())
         cursor.close()
 
     def insertDatabase(self):
-        idd = self.ui_add.comboBox.currentData()
-        idc = self.ui_add.comboBox_2.currentData()
+        idd1 = self.ui_add.comboBox.currentData()
+        idd2 = self.ui_add.comboBox_2.currentData()
         self.ui_add.close()
         cursor = self.mydb.cursor()
-        query = "INSERT INTO desciplinecompetence (IDD, IDC) VALUES (%s, %s)"
-        value = (idd, idc)
+        query = "INSERT INTO result (IDD1, IDD2) VALUES (%s, %s)"
+        value = (idd1, idd2)
         cursor.execute(query, value)
         self.mydb.commit()
         self.showDatabase()
@@ -132,13 +128,13 @@ class DesciplineCompetence(QDialog):
     def updateDatabase(self):
         selectedItems = self.table.selectedItems()
         if selectedItems:
-            idd = self.ui_update.comboBox.currentData()
-            idc = self.ui_update.comboBox_2.currentData()
+            idd1 = self.ui_update.comboBox.currentData()
+            idd2 = self.ui_update.comboBox_2.currentData()
             selectedRow = selectedItems[0].row()
             cursor = self.mydb.cursor()
             unique_identifier = int(self.table.item(selectedRow, 0).text())
-            query = "UPDATE desciplinecompetence SET IDD=%s, IDC=%s WHERE ID=%s"
-            value = (idd,idc,unique_identifier)
+            query = "UPDATE result SET IDD1=%s, IDD2=%s, Object1='', Object2='', Relations=0, DescriptionR='' WHERE IDResult=%s"
+            value = (idd1,idd2,unique_identifier)
             cursor.execute(query, value)
             self.mydb.commit()
             cursor.close()
@@ -151,15 +147,31 @@ class DesciplineCompetence(QDialog):
             selectedRow = selectedItems[0].row()
             cursor = self.mydb.cursor()
             unique_identifier = int(self.table.item(selectedRow, 0).text())
-            query = "DELETE FROM desciplinecompetence WHERE ID=%s"
+            query = "DELETE FROM result WHERE IDResult=%s"
             value = (unique_identifier,)
             cursor.execute(query, value)
             self.mydb.commit()
             cursor.close()
             self.showDatabase()
 
+    def getResult(self):
+        selectedItems = self.table.selectedItems()
+        if selectedItems:
+            text = "Checked"
+            selectedRow = selectedItems[0].row()
+            cursor = self.mydb.cursor()
+            unique_identifier = int(self.table.item(selectedRow, 0).text())
+            query = "UPDATE result SET Object1=%s, Object2=%s, Relations=0, DescriptionR=%s WHERE IDResult=%s"
+            value = (text,text,text,unique_identifier)
+            cursor.execute(query, value)
+            self.mydb.commit()
+            cursor.close()
+            self.ui_update.close()
+            self.showDatabase()
+
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    widget = DesciplineCompetence()
+    widget = Result()
     widget.show()
     sys.exit(app.exec())

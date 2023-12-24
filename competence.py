@@ -1,6 +1,6 @@
 import sys
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QLineEdit, QTextEdit, QTableWidget, QTableWidgetItem, QHeaderView, QDialog, QAbstractItemView
+from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QWidget, QLineEdit, QTextEdit, QTableWidget, QTableWidgetItem, QHeaderView, QDialog, QAbstractItemView
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import Qt
 import mysql.connector as mc
@@ -13,8 +13,8 @@ import mysql.connector as mc
 QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
 
 class Competence(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, mydb):
+        super().__init__()
         loader = QUiLoader()
         loader.registerCustomWidget(Competence)
         self.ui = loader.load('competence.ui', self)
@@ -33,7 +33,7 @@ class Competence(QDialog):
         column_labels = ["","Название", "Описание", "Тип"]
         self.table.setHorizontalHeaderLabels(column_labels)
 
-        self.mydb = self.connect_database()
+        self.mydb = mydb
         self.showDatabase()
 
     def connect_database(self):
@@ -90,10 +90,13 @@ class Competence(QDialog):
             selectedRow = selectedItems[0].row()
             cursor = self.mydb.cursor()
             unique_identifier = int(self.table.item(selectedRow, 0).text())
-            query = "DELETE FROM competence WHERE IDC=%s"
-            value = (unique_identifier,)
-            cursor.execute(query, value)
-            self.mydb.commit()
+            try:
+                query = "DELETE FROM competence WHERE IDC=%s"
+                value = (unique_identifier,)
+                cursor.execute(query, value)
+                self.mydb.commit()
+            except mc.errors.IntegrityError as e:
+                QMessageBox.warning(None, 'Ошибка', 'Невозможно удалить запись. Она используется в другой таблице.')
             cursor.close()
             self.showDatabase()
 

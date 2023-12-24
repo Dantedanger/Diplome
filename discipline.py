@@ -1,22 +1,15 @@
 import sys
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QLineEdit, QTextEdit, QTableWidget, QTableWidgetItem, QHeaderView,QDialog, QAbstractItemView
+from PySide6.QtWidgets import QApplication, QMessageBox, QMainWindow, QWidget, QLineEdit, QTextEdit, QTableWidget, QTableWidgetItem, QHeaderView,QDialog, QAbstractItemView
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import Qt
 import mysql.connector as mc
 
-# Important:
-# You need to run the following command to generate the ui_form.py file
-#     pyside6-uic form.ui -o ui_form.py, or
-#     pyside6-uic D:\QtProjects\Diplom\form.ui -o D:\QtProjects\Diplom\ui_form.py
-#     pyside6-uic D:\QtProjects\Diplom\discipline.ui -o D:\QtProjects\Diplom\ui_discipline.py
-#     pyside2-uic form.ui -o ui_form.py
-
 QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
 
 class Discipline(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, mydb):
+        super().__init__()
         loader = QUiLoader()
         loader.registerCustomWidget(Discipline)
         self.ui = loader.load('discipline.ui', self)
@@ -35,21 +28,8 @@ class Discipline(QDialog):
         column_labels = ["","Название", "Кол-во часов", "Описание"]
         self.table.setHorizontalHeaderLabels(column_labels)
 
-        self.mydb = self.connect_database()
+        self.mydb = mydb
         self.showDatabase()
-
-    def connect_database(self):
-        try:
-            mydb = mc.connect(
-                host = "localhost",
-                user = "root",
-                password = "",
-                database = "09.03.04.database"
-                )
-            print(f'Connected')
-            return mydb
-        except mc.Error as e:
-            print(f'NOT Connected')
 
     def showDatabase(self):
         cursor = self.mydb.cursor()
@@ -92,10 +72,13 @@ class Discipline(QDialog):
             selectedRow = selectedItems[0].row()
             cursor = self.mydb.cursor()
             unique_identifier = int(self.table.item(selectedRow, 0).text())
-            query = "DELETE FROM discipline WHERE IDD=%s"
-            value = (unique_identifier,)
-            cursor.execute(query, value)
-            self.mydb.commit()
+            try:
+                query = "DELETE FROM discipline WHERE IDD=%s"
+                value = (unique_identifier,)
+                cursor.execute(query, value)
+                self.mydb.commit()
+            except mc.errors.IntegrityError as e:
+                QMessageBox.warning(None, 'Ошибка', 'Невозможно удалить запись. Она используется в другой таблице.')
             cursor.close()
             self.showDatabase()
 

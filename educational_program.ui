@@ -101,41 +101,6 @@
     <string>Изменить</string>
    </property>
   </widget>
-  <action name="action">
-   <property name="text">
-    <string>Дисциплины</string>
-   </property>
-  </action>
-  <action name="action_2">
-   <property name="text">
-    <string>Дисциплины учебного плана</string>
-   </property>
-  </action>
-  <action name="action_3">
-   <property name="text">
-    <string>Компетенции</string>
-   </property>
-  </action>
-  <action name="action_4">
-   <property name="text">
-    <string>Компетенции дисциплины</string>
-   </property>
-  </action>
-  <action name="action_5">
-   <property name="text">
-    <string>Образовательный стандарт</string>
-   </property>
-  </action>
-  <action name="action_6">
-   <property name="text">
-    <string>Образовательная программа</string>
-   </property>
-  </action>
-  <action name="action_7">
-   <property name="text">
-    <string>Результат</string>
-   </property>
-  </action>
  </widget>
  <resources/>
  <connections/>

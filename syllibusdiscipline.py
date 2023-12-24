@@ -14,8 +14,8 @@ import mysql.connector as mc
 QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
 
 class SyllibusDiscipline(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, mydb):
+        super().__init__()
         loader = QUiLoader()
         loader.registerCustomWidget(SyllibusDiscipline)
         self.ui = loader.load('syllibusdiscipline.ui', self)
@@ -59,21 +59,8 @@ class SyllibusDiscipline(QDialog):
         self.table.setHorizontalHeaderLabels(column_labels)
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
 
-        self.mydb = self.connect_database()
+        self.mydb = mydb
         self.showDatabase()
-
-    def connect_database(self):
-        try:
-            mydb = mc.connect(
-                host = "localhost",
-                user = "root",
-                password = "",
-                database = "09.03.04.database"
-                )
-            print(f'Connected')
-            return mydb
-        except mc.Error as e:
-            print(f'NOT Connected')
 
     def showDatabase(self):
         cursor = self.mydb.cursor()
