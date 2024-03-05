@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>326</height>
+    <height>377</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -156,6 +156,19 @@
     </property>
     <property name="text">
      <string>Спасибо за использование данной программы</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>300</y>
+      <width>381</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Загрузить программу или дисциплину WORD</string>
     </property>
    </widget>
   </widget>

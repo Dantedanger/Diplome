@@ -6,11 +6,6 @@ from PySide6.QtCore import Qt, QFile
 
 import mysql.connector as mc
 
-# Important:
-# You need to run the following command to generate the ui_form.py file
-#     pyside6-uic form.ui -o ui_form.py, or
-#     pyside2-uic form.ui -o ui_form.py
-
 QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
 
 class Educational_program(QDialog):
@@ -28,20 +23,8 @@ class Educational_program(QDialog):
             ui_add.close()
             self.ui_file_a = ui_add
 
-
-        loader = QUiLoader()
-        ui_file_path_update = "educational_programupdate.ui"
-        ui_update = QFile(ui_file_path_update)
-        if ui_update.open(QFile.ReadOnly):
-            self.ui_update = loader.load(ui_update, self)
-            ui_update.close()
-            self.ui_file_u = ui_update
-
         self.ui_add.pushButton.clicked.connect(self.insertDatabase)
         self.ui_add.pushButton_2.clicked.connect(self.ui_add.accept)
-
-        self.ui_update.pushButton.clicked.connect(self.updateDatabase)
-        self.ui_update.pushButton_2.clicked.connect(self.ui_update.accept)
 
         self.ui.pushButton.clicked.connect(self.startInsertDatabase)
         self.ui.pushButton_3.clicked.connect(self.startUpdateDatabase)
@@ -73,12 +56,17 @@ class Educational_program(QDialog):
         cursor.close()
 
     def startInsertDatabase(self):
-        self.populate_combobox(self.ui_add)
+        self.type = True
+        self.populate_combobox()
         self.ui_add.setWindowTitle("Добавление")
+        self.ui_add.label_3.setText("Добавление образовательной программы:")
+        self.ui_add.lineEdit.setText("")
+        self.ui_add.lineEdit_2.setText("")
+        self.ui_add.lineEdit_3.setText("")
         self.ui_add.exec()
 
-    def populate_combobox(self,x:QWidget):
-        x.comboBox.clear()
+    def populate_combobox(self):
+        self.ui_add.comboBox.clear()
         cursor = self.mydb.cursor()
         query = "SELECT IDEdSt, Name FROM edicational_standart"
         cursor.execute(query)
@@ -86,14 +74,14 @@ class Educational_program(QDialog):
         for row in results:
             item_id = row[0]
             item_text = str(row[1])
-            x.comboBox.addItem(item_text, userData=item_id)
-        if (x==self.ui_update):
+            self.ui_add.comboBox.addItem(item_text, userData=item_id)
+        if not(self.type):
             selectedItems = self.table.selectedItems()
             if (selectedItems):
-                self.ui_update.comboBox.setCurrentText(selectedItems[0].text())
-                self.ui_update.lineEdit.setText(selectedItems[1].text())
-                self.ui_update.lineEdit_2.setText(selectedItems[2].text())
-                self.ui_update.lineEdit_3.setText(selectedItems[3].text())
+                self.ui_add.comboBox.setCurrentText(selectedItems[0].text())
+                self.ui_add.lineEdit.setText(selectedItems[1].text())
+                self.ui_add.lineEdit_2.setText(selectedItems[2].text())
+                self.ui_add.lineEdit_3.setText(selectedItems[3].text())
         cursor.close()
 
     def insertDatabase(self):
@@ -101,37 +89,32 @@ class Educational_program(QDialog):
         name = self.ui_add.lineEdit.text()
         profile = self.ui_add.lineEdit_2.text()
         syname = self.ui_add.lineEdit_3.text()
-        self.ui_add.close()
         cursor = self.mydb.cursor()
-        query = "INSERT INTO edicational_program (IDEdSt, Name, Profile, SyName) VALUES (%s, %s, %s, %s)"
-        value = (idedst, name, profile, syname)
-        cursor.execute(query, value)
-        self.mydb.commit()
-        self.showDatabase()
-        cursor.close()
-
-    def startUpdateDatabase(self):
-        self.populate_combobox(self.ui_update)
-        self.ui_update.setWindowTitle("Изменение")
-        self.ui_update.exec()
-
-    def updateDatabase(self):
-        selectedItems = self.table.selectedItems()
-        if selectedItems:
-            idedst = self.ui_update.comboBox.currentData()
-            name = self.ui_update.lineEdit.text()
-            profile = self.ui_update.lineEdit_2.text()
-            syname = self.ui_update.lineEdit_3.text()
+        self.ui_add.close()
+        if (self.type):
+            query = "INSERT INTO edicational_program (IDEdSt, Name, Profile, SyName) VALUES (%s, %s, %s, %s)"
+            value = (idedst, name, profile, syname)
+        else:
+            selectedItems = self.table.selectedItems()
             selectedRow = selectedItems[0].row()
-            cursor = self.mydb.cursor()
-            unique_identifier = int(self.table.item(selectedRow, 0).text())
+            unique_identifier = int(self.table.item(selectedRow, 1).text())
             query = "UPDATE edicational_program SET IDEdSt=%s, Name=%s, Profile=%s, SyName=%s WHERE IDEdPr=%s"
             value = (idedst, name, profile, syname, unique_identifier)
-            cursor.execute(query, value)
-            self.mydb.commit()
-            cursor.close()
-            self.ui_update.close()
-            self.showDatabase()
+        cursor.execute(query, value)
+        self.mydb.commit()
+        cursor.close()
+        self.showDatabase()
+
+    def startUpdateDatabase(self):
+        selectedItems = self.table.selectedItems()
+        if not selectedItems:
+            QMessageBox.warning(None, 'Ошибка', 'Не выделена строка для обновления')
+        else:
+            self.type = False
+            self.populate_combobox()
+            self.ui_add.setWindowTitle("Изменение")
+            self.ui_add.label_3.setText("Изменение образовательной программы:")
+            self.ui_add.exec()
 
     def deleteDatabase(self):
         selectedItems = self.table.selectedItems()

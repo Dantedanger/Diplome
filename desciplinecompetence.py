@@ -1,15 +1,10 @@
 import sys
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QLineEdit, QComboBox, QTextEdit, QTableWidget, QTableWidgetItem, QHeaderView, QDialog, QAbstractItemView
+from PySide6.QtWidgets import QApplication, QMessageBox, QWidget, QLineEdit, QComboBox, QTextEdit, QTableWidget, QTableWidgetItem, QHeaderView, QDialog, QAbstractItemView
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import Qt, QFile
 
 import mysql.connector as mc
-
-# Important:
-# You need to run the following command to generate the ui_form.py file
-#     pyside6-uic form.ui -o ui_form.py, or
-#     pyside2-uic form.ui -o ui_form.py
 
 QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
 
@@ -28,20 +23,8 @@ class DesciplineCompetence(QDialog):
             ui_add.close()
             self.ui_file_a = ui_add
 
-
-        loader = QUiLoader()
-        ui_file_path_update = "desciplinecompetenceupdate.ui"
-        ui_update = QFile(ui_file_path_update)
-        if ui_update.open(QFile.ReadOnly):
-            self.ui_update = loader.load(ui_update, self)
-            ui_update.close()
-            self.ui_file_u = ui_update
-
         self.ui_add.pushButton.clicked.connect(self.insertDatabase)
         self.ui_add.pushButton_2.clicked.connect(self.ui_add.accept)
-
-        self.ui_update.pushButton.clicked.connect(self.updateDatabase)
-        self.ui_update.pushButton_2.clicked.connect(self.ui_update.accept)
 
         self.ui.pushButton.clicked.connect(self.startInsertDatabase)
         self.ui.pushButton_3.clicked.connect(self.startUpdateDatabase)
@@ -74,13 +57,15 @@ class DesciplineCompetence(QDialog):
         cursor.close()
 
     def startInsertDatabase(self):
-        self.populate_combobox(self.ui_add)
-        self.populate_combobox_2(self.ui_add)
+        self.type = True
+        self.populate_combobox()
+        self.populate_combobox_2()
         self.ui_add.setWindowTitle("Добавление")
+        self.ui_add.label_3.setText("Добавление компетенции:")
         self.ui_add.exec()
 
-    def populate_combobox(self,x:QWidget):
-        x.comboBox.clear()
+    def populate_combobox(self):
+        self.ui_add.comboBox.clear()
         cursor = self.mydb.cursor()
         query = "SELECT IDD, Name FROM discipline"
         cursor.execute(query)
@@ -88,15 +73,15 @@ class DesciplineCompetence(QDialog):
         for row in results:
             item_id = row[0]
             item_text = str(row[1])
-            x.comboBox.addItem(item_text, userData=item_id)
-        if (x==self.ui_update):
+            self.ui_add.comboBox.addItem(item_text, userData=item_id)
+        if not(self.type):
             selectedItems = self.table.selectedItems()
             if (selectedItems):
-                self.ui_update.comboBox.setCurrentText(selectedItems[0].text())
+                self.ui_add.comboBox.setCurrentText(selectedItems[0].text())
         cursor.close()
 
-    def populate_combobox_2(self,x:QWidget):
-        x.comboBox_2.clear()
+    def populate_combobox_2(self):
+        self.ui_add.comboBox_2.clear()
         cursor = self.mydb.cursor()
         query = "SELECT IDC, Name FROM competence"
         cursor.execute(query)
@@ -104,11 +89,11 @@ class DesciplineCompetence(QDialog):
         for row in results:
             item_id = row[0]
             item_text = str(row[1])
-            x.comboBox_2.addItem(item_text, userData=item_id)
-        if (x==self.ui_update):
+            self.ui_add.comboBox_2.addItem(item_text, userData=item_id)
+        if not(self.type):
             selectedItems = self.table.selectedItems()
             if (selectedItems):
-                x.comboBox_2.setCurrentText(selectedItems[1].text())
+                self.ui_add.comboBox_2.setCurrentText(selectedItems[1].text())
         cursor.close()
 
     def insertDatabase(self):
@@ -116,34 +101,31 @@ class DesciplineCompetence(QDialog):
         idc = self.ui_add.comboBox_2.currentData()
         self.ui_add.close()
         cursor = self.mydb.cursor()
-        query = "INSERT INTO desciplinecompetence (IDD, IDC) VALUES (%s, %s)"
-        value = (idd, idc)
-        cursor.execute(query, value)
-        self.mydb.commit()
-        self.showDatabase()
-        cursor.close()
-
-    def startUpdateDatabase(self):
-        self.populate_combobox(self.ui_update)
-        self.populate_combobox_2(self.ui_update)
-        self.ui_update.setWindowTitle("Изменение")
-        self.ui_update.exec()
-
-    def updateDatabase(self):
-        selectedItems = self.table.selectedItems()
-        if selectedItems:
-            idd = self.ui_update.comboBox.currentData()
-            idc = self.ui_update.comboBox_2.currentData()
+        if (self.type):
+            query = "INSERT INTO desciplinecompetence (IDD, IDC) VALUES (%s, %s)"
+            value = (idd, idc)
+        else:
+            selectedItems = self.table.selectedItems()
             selectedRow = selectedItems[0].row()
-            cursor = self.mydb.cursor()
             unique_identifier = int(self.table.item(selectedRow, 0).text())
             query = "UPDATE desciplinecompetence SET IDD=%s, IDC=%s WHERE ID=%s"
             value = (idd,idc,unique_identifier)
-            cursor.execute(query, value)
-            self.mydb.commit()
-            cursor.close()
-            self.ui_update.close()
-            self.showDatabase()
+        cursor.execute(query, value)
+        self.mydb.commit()
+        cursor.close()
+        self.showDatabase()
+
+    def startUpdateDatabase(self):
+        selectedItems = self.table.selectedItems()
+        if not selectedItems:
+            QMessageBox.warning(None, 'Ошибка', 'Не выделена строка для обновления')
+        else:
+            self.type = False
+            self.populate_combobox()
+            self.populate_combobox_2()
+            self.ui_add.setWindowTitle("Изменение")
+            self.ui_add.label_3.setText("Изменение компетенции:")
+            self.ui_add.exec()
 
     def deleteDatabase(self):
         selectedItems = self.table.selectedItems()

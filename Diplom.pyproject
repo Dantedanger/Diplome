@@ -1,3 +1,3 @@
 {
-    "files": ["syllibusdisciplineupdate.ui","educational_program.ui","educational_programadd.ui","educational_programupdate.ui","syllibusdiscipline.ui","syllibusdiscipline.py","discipline.ui","form.ui","desciplinecompetence.py","discipline.py","desciplinecompetence.ui","edicational_standart.py","educational_program.py","mainwindow.py","edicational_standart.ui","competence.ui","desciplinecompetenceadd.ui","desciplinecompetenceupdate.ui","syllibusdisciplineadd.ui","competence.py","result.py","result.ui","resultadd.ui","resultupdate.ui"]
+    "files": ["result.py","desciplinecompetenceadd.ui","discipline.ui","syllibusdisciplineadd.ui","educational_program.py","edicational_standart.py","syllibusdiscipline.ui","mainwindow.py","competence.ui","discipline.py","syllibusdiscipline.py","resultadd.ui","desciplinecompetence.py","form.ui","educational_programadd.ui","competence.py","edicational_standart.ui","desciplinecompetence.ui","result.ui","educational_program.ui"]
 }

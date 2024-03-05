@@ -11,16 +11,12 @@ import mysql.connector as mc
 #     pyside6-uic D:\QtProjects\Diplom\edicational_standart.ui -o D:\QtProjects\Diplom\ui_edicational_standart.py
 #     pyside6-uic D:\QtProjects\Diplom\desciplinecompetence.ui -o D:\QtProjects\Diplom\ui_desciplinecompetence.py
 #     pyside6-uic D:\QtProjects\Diplom\desciplinecompetenceadd.ui -o D:\QtProjects\Diplom\ui_desciplinecompetenceadd.py
-#     pyside6-uic D:\QtProjects\Diplom\desciplinecompetenceupdate.ui -o D:\QtProjects\Diplom\ui_desciplinecompetenceupdate.py
 #     pyside6-uic D:\QtProjects\Diplom\educational_program.ui -o D:\QtProjects\Diplom\ui_educational_program.py
 #     pyside6-uic D:\QtProjects\Diplom\educational_programadd.ui -o D:\QtProjects\Diplom\ui_educational_programadd.py
-#     pyside6-uic D:\QtProjects\Diplom\educational_programupdate.ui -o D:\QtProjects\Diplom\ui_educational_programupdate.py
 #     pyside6-uic D:\QtProjects\Diplom\syllibusdiscipline.ui -o D:\QtProjects\Diplom\ui_syllibusdiscipline.py
 #     pyside6-uic D:\QtProjects\Diplom\syllibusdisciplineadd.ui -o D:\QtProjects\Diplom\ui_syllibusdisciplineadd.py
-#     pyside6-uic D:\QtProjects\Diplom\syllibusdisciplineupdate.ui -o D:\QtProjects\Diplom\ui_syllibusdisciplineupdate.py
 #     pyside6-uic D:\QtProjects\Diplom\result.ui -o D:\QtProjects\Diplom\ui_syllibusresult.py
 #     pyside6-uic D:\QtProjects\Diplom\resultadd.ui -o D:\QtProjects\Diplom\ui_syllibusresulteadd.py
-#     pyside6-uic D:\QtProjects\Diplom\resultupdate.ui -o D:\QtProjects\Diplom\ui_syllibusresultupdate.py
 
 
 from ui_form import Ui_MainWindow
@@ -38,6 +34,8 @@ class MainWindow(QMainWindow):
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+
+        self.ui.pushButton.clicked.connect(self.loadPrograms)
 
         self.ui.action.triggered.connect(self.onActionTriggered)
         self.ui.action_2.triggered.connect(self.onAction_2Triggered)
@@ -92,7 +90,7 @@ class MainWindow(QMainWindow):
                 password = "",
                 database = "09.03.04.database"
                 )
-            print(f'Connected')
+            print(f'Connect')
             return mydb
         except mc.Error as e:
             print(f'NOT Connected')
@@ -102,6 +100,9 @@ class MainWindow(QMainWindow):
         self.mydb.close()
         print(f'Disconnect')
         event.accept()
+
+    def loadPrograms(self):
+        print("load")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
