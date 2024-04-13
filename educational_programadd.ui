@@ -41,24 +41,6 @@
     <string>Образовательный стандарт:</string>
    </property>
   </widget>
-  <widget class="QLabel" name="label_2">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>130</y>
-     <width>231</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>12</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>Образовательная программа:</string>
-   </property>
-  </widget>
   <widget class="QLabel" name="label_3">
    <property name="geometry">
     <rect>
@@ -101,16 +83,6 @@
    </property>
    <property name="text">
     <string>Отмена</string>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="lineEdit">
-   <property name="geometry">
-    <rect>
-     <x>240</x>
-     <y>130</y>
-     <width>261</width>
-     <height>24</height>
-    </rect>
    </property>
   </widget>
   <widget class="QLabel" name="label_4">
@@ -166,7 +138,7 @@
     </font>
    </property>
    <property name="text">
-    <string>Учебный план:</string>
+    <string>Год программы:</string>
    </property>
   </widget>
  </widget>

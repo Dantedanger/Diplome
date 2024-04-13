@@ -29,32 +29,22 @@ class SyllibusDiscipline(QDialog):
         self.ui.pushButton.clicked.connect(self.startInsertDatabase)
         self.ui.pushButton_3.clicked.connect(self.startUpdateDatabase)
         self.ui.pushButton_2.clicked.connect(self.deleteDatabase)
+        self.ui.comboBox.currentIndexChanged.connect(self.filterData)
 
         self.table = self.ui.tableWidget
-        self.table.setColumnCount(6)
+        self.table.setColumnCount(7)
         self.table.setColumnHidden(0, True)
         self.table.setColumnHidden(1, True)
         self.table.setColumnHidden(2, True)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        column_labels = ["","","", "Название учебного плана", "Название дисциплины", "Семестр"]
+        column_labels = ["","","", "Профиль", "Год учебного плана", "Название дисциплины", "Семестр"]
         self.table.setHorizontalHeaderLabels(column_labels)
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
 
         self.mydb = mydb
-        self.showDatabase()
-
-    def showDatabase(self):
-        cursor = self.mydb.cursor()
-        cursor.execute("SELECT * FROM syllibusdiscipline_view")
-        result = cursor.fetchall()
-        self.table.setRowCount(0)
-        for row_number, row_data in enumerate(result):
-            self.table.insertRow(row_number)
-            for column_number, data in enumerate(row_data):
-                 self.table.setItem(row_number, column_number, QTableWidgetItem(str(data)))
-        cursor.close()
+        self.filter_combobox()
 
     def startInsertDatabase(self):
         self.type = True
@@ -68,17 +58,18 @@ class SyllibusDiscipline(QDialog):
         self.ui_add.comboBox.clear()
         self.ui_add.lineEdit.setText("")
         cursor = self.mydb.cursor()
-        query = "SELECT IDEdPr, Name FROM edicational_program"
+        query = "SELECT IDEdPr, Profile, Year FROM edicational_program"
         cursor.execute(query)
         results = cursor.fetchall()
         for row in results:
             item_id = row[0]
             item_text = str(row[1])
-            self.ui_add.comboBox.addItem(item_text, userData=item_id)
+            item_text2 = str(row[2])
+            self.ui_add.comboBox.addItem(item_text+' '+item_text2, userData=item_id)
         if not (self.type):
             selectedItems = self.table.selectedItems()
-            self.ui_add.comboBox.setCurrentText(selectedItems[0].text())
-            self.ui_add.lineEdit.setText(selectedItems[2].text())
+            self.ui_add.comboBox.setCurrentText(selectedItems[0].text()+' '+ selectedItems[1].text())
+            self.ui_add.lineEdit.setText(selectedItems[3].text())
         cursor.close()
 
     def populate_combobox_2(self):
@@ -93,7 +84,7 @@ class SyllibusDiscipline(QDialog):
             self.ui_add.comboBox_2.addItem(item_text, userData=item_id)
         if not (self.type):
             selectedItems = self.table.selectedItems()
-            self.ui_add.comboBox_2.setCurrentText(selectedItems[1].text())
+            self.ui_add.comboBox_2.setCurrentText(selectedItems[2].text())
         cursor.close()
 
     def insertDatabase(self):
@@ -114,7 +105,7 @@ class SyllibusDiscipline(QDialog):
         cursor.execute(query, value)
         self.mydb.commit()
         cursor.close()
-        self.showDatabase()
+        self.filterData()
 
     def startUpdateDatabase(self):
         selectedItems = self.table.selectedItems()
@@ -139,7 +130,37 @@ class SyllibusDiscipline(QDialog):
             cursor.execute(query, value)
             self.mydb.commit()
             cursor.close()
-            self.showDatabase()
+            self.filterData()
+
+    def filter_combobox(self):
+        self.ui.comboBox.clear()
+        cursor = self.mydb.cursor()
+        query = "SELECT IDEdPr, Profile, Year FROM edicational_program"
+        cursor.execute(query)
+        results = cursor.fetchall()
+        for row in results:
+            item_id = row[0]
+            item_text = str(row[1])
+            item_text2 = str(row[2])
+            self.ui.comboBox.addItem(item_text+' '+item_text2, userData=item_id)
+        cursor.close()
+
+    def filterData(self):
+        prof_year = self.ui.comboBox.currentText()
+        prof = prof_year[:-5]  # Получить все символы до последних 4
+        year = prof_year[-4:]  # Получить последние 4 символа
+        cursor = self.mydb.cursor()
+        query = "SELECT * FROM syllibusdiscipline_view WHERE Profile = %s AND Year= %s"
+        cursor.execute(query, (prof, year))
+        filtered_data = cursor.fetchall()
+
+        self.table.setRowCount(len(filtered_data))
+        self.table.setColumnCount(len(filtered_data[0]))
+
+        for i, row in enumerate(filtered_data):
+            for j, cell in enumerate(row):
+                self.table.setItem(i, j, QTableWidgetItem(str(cell)))
+        cursor.close()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

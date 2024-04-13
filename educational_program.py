@@ -31,13 +31,13 @@ class Educational_program(QDialog):
         self.ui.pushButton_2.clicked.connect(self.deleteDatabase)
 
         self.table = self.ui.tableWidget
-        self.table.setColumnCount(6)
+        self.table.setColumnCount(5)
         self.table.setColumnHidden(0, True)
         self.table.setColumnHidden(1, True)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        column_labels = ["","","Название образовательного стандарта", "Название программы", "Профиль","Учебный план"]
+        column_labels = ["","","Название образовательного стандарта","Профиль","Год плана"]
         self.table.setHorizontalHeaderLabels(column_labels)
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
 
@@ -60,7 +60,6 @@ class Educational_program(QDialog):
         self.populate_combobox()
         self.ui_add.setWindowTitle("Добавление")
         self.ui_add.label_3.setText("Добавление образовательной программы:")
-        self.ui_add.lineEdit.setText("")
         self.ui_add.lineEdit_2.setText("")
         self.ui_add.lineEdit_3.setText("")
         self.ui_add.exec()
@@ -79,27 +78,25 @@ class Educational_program(QDialog):
             selectedItems = self.table.selectedItems()
             if (selectedItems):
                 self.ui_add.comboBox.setCurrentText(selectedItems[0].text())
-                self.ui_add.lineEdit.setText(selectedItems[1].text())
-                self.ui_add.lineEdit_2.setText(selectedItems[2].text())
-                self.ui_add.lineEdit_3.setText(selectedItems[3].text())
+                self.ui_add.lineEdit_2.setText(selectedItems[1].text())
+                self.ui_add.lineEdit_3.setText(selectedItems[2].text())
         cursor.close()
 
     def insertDatabase(self):
         idedst = self.ui_add.comboBox.currentData()
-        name = self.ui_add.lineEdit.text()
         profile = self.ui_add.lineEdit_2.text()
-        syname = self.ui_add.lineEdit_3.text()
+        year = self.ui_add.lineEdit_3.text()
         cursor = self.mydb.cursor()
         self.ui_add.close()
         if (self.type):
-            query = "INSERT INTO edicational_program (IDEdSt, Name, Profile, SyName) VALUES (%s, %s, %s, %s)"
-            value = (idedst, name, profile, syname)
+            query = "INSERT INTO edicational_program (IDEdSt, Profile, Year) VALUES (%s, %s, %s)"
+            value = (idedst, profile, year)
         else:
             selectedItems = self.table.selectedItems()
             selectedRow = selectedItems[0].row()
             unique_identifier = int(self.table.item(selectedRow, 1).text())
-            query = "UPDATE edicational_program SET IDEdSt=%s, Name=%s, Profile=%s, SyName=%s WHERE IDEdPr=%s"
-            value = (idedst, name, profile, syname, unique_identifier)
+            query = "UPDATE edicational_program SET IDEdSt=%s, Profile=%s, Year=%s WHERE IDEdPr=%s"
+            value = (idedst, profile, year, unique_identifier)
         cursor.execute(query, value)
         self.mydb.commit()
         cursor.close()

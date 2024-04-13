@@ -102,6 +102,140 @@ class MainWindow(QMainWindow):
         print(f'Disconnect')
         event.accept()
 
+    def addEdSt(self, prog, years):
+        numb = prog[:8]
+        prog = prog[9:]
+        cursor = self.mydb.cursor()
+        query = "INSERT INTO edicational_standart (Specialization_code, Name, Time) VALUES (%s, %s, %s)"
+        try:
+            cursor.execute(query,(numb, prog, years.lower()))
+        except mc.Error as err:
+            if err.errno == 1062:  # Ошибка нарушения уникального ключа
+                pass  # Пропускаем эту ошибку
+            else:
+                print("Ошибка MySQL:", err.msg)
+        self.mydb.commit()
+        cursor.close()
+
+    def addProfile(self, prog, profile, years):
+        ided = 0
+        cursor = self.mydb.cursor()
+        query = "SELECT IDEdSt FROM edicational_standart WHERE Name = %s LIMIT 1"
+        cursor.execute(query, (prog,))
+        row = cursor.fetchone()  # Получение первой строки результата запроса
+        if row:
+            ided = row[0]
+        cursor.close()
+
+        cursor = self.mydb.cursor()
+        query = "INSERT INTO edicational_program (IDEdSt, Profile, Year) VALUES (%s, %s, %s)"
+        try:
+            cursor.execute(query,(ided, profile, years))
+        except mc.Error as err:
+            if err.errno == 1062:  # Ошибка нарушения уникального ключа
+                pass  # Пропускаем эту ошибку
+            else:
+                print("Ошибка MySQL:", err.msg)
+        self.mydb.commit()
+        cursor.close()
+
+    def addDisciplineinProfile(self, profile, discipline, semester):
+        idpr = 0
+        idd = 0
+        cursor = self.mydb.cursor()
+        query = "SELECT IDEdPr FROM edicational_program WHERE Profile = %s LIMIT 1"
+        cursor.execute(query, (profile,))
+        row = cursor.fetchone()  # Получение первой строки результата запроса
+        if row:
+            idpr = row[0]
+        cursor.close()
+
+        cursor = self.mydb.cursor()
+        query = "SELECT IDD FROM discipline WHERE Name = %s LIMIT 1"
+        cursor.execute(query, (discipline,))
+        row = cursor.fetchone()  # Получение первой строки результата запроса
+        if row:
+            idd = row[0]
+        cursor.close()
+
+        cursor = self.mydb.cursor()
+        query = "INSERT INTO syllibusdiscipline (IDEdPr, IDD, Semesters) VALUES (%s, %s, %s)"
+        try:
+            cursor.execute(query,(idpr, idd, semester))
+        except mc.Error as err:
+            if err.errno == 1062:  # Ошибка нарушения уникального ключа
+                pass  # Пропускаем эту ошибку
+            else:
+                print("Ошибка MySQL:", err.msg)
+        self.mydb.commit()
+        cursor.close()
+
+    def addDiscipline(self, name, hour,descr):
+        cursor = self.mydb.cursor()
+        query = "INSERT INTO discipline (Name, QuantityAcademicHour, Description, Object) VALUES (%s, %s, %s, '')"
+        try:
+            cursor.execute(query,(name.lower(), hour, descr))
+        except mc.Error as err:
+            if err.errno == 1062:  # Ошибка нарушения уникального ключа
+                pass  # Пропускаем эту ошибку
+            else:
+                print("Ошибка MySQL:", err.msg)
+        self.mydb.commit()
+        cursor.close()
+
+    def addCompetence(self, name, desc):
+        type = name[:name.find('-')]
+        cursor = self.mydb.cursor()
+        query = "INSERT INTO competence (Name, Description, Type) VALUES (%s, %s, %s)"
+        try:
+            cursor.execute(query,(name.upper(), desc, type))
+        except mc.Error as err:
+            if err.errno == 1062:  # Ошибка нарушения уникального ключа
+                pass  # Пропускаем эту ошибку
+            else:
+                print("Ошибка MySQL:", err.msg)
+        self.mydb.commit()
+        cursor.close()
+
+    def addCompetenceDiscipline(self, competence, discipline):
+        idc = 0
+        idd = 0
+        cursor = self.mydb.cursor()
+        query = "SELECT IDC FROM competence WHERE Name = %s LIMIT 1"
+        cursor.execute(query, (competence,))
+        row = cursor.fetchone()  # Получение первой строки результата запроса
+        if row:
+            idc = row[0]
+        cursor.close()
+
+        cursor = self.mydb.cursor()
+        query = "SELECT IDD FROM discipline WHERE Name = %s LIMIT 1"
+        cursor.execute(query, (discipline,))
+        row = cursor.fetchone()  # Получение первой строки результата запроса
+        if row:
+            idd = row[0]
+        cursor.close()
+
+        cursor = self.mydb.cursor()
+        query = "INSERT INTO desciplinecompetence (IDC, IDD) VALUES (%s, %s)"
+        try:
+            cursor.execute(query,(idc, idd))
+        except mc.Error as err:
+            if err.errno == 1062:  # Ошибка нарушения уникального ключа
+                pass  # Пропускаем эту ошибку
+            else:
+                print("Ошибка MySQL:", err.msg)
+        self.mydb.commit()
+        cursor.close()
+
+#    def firstly(self, doc_name):
+#        doc = Document(doc_name)
+#        doc_inner = doc._element
+#        target_xpath = '//w:sdt//w:t'
+#        for result_el in doc_inner.xpath(target_xpath):
+#            result_el.text = ' '
+#        doc.save(doc_name)
+
     def load_files(self):
         file_dialog = QFileDialog()
         file_dialog.setFileMode(QFileDialog.ExistingFiles)
@@ -110,26 +244,32 @@ class MainWindow(QMainWindow):
         if file_dialog.exec():
             files = file_dialog.selectedFiles()
             for file_name in files:
-                print(f"РАБОЧАЯ ПРОГРАММА ДИСЦИПЛИНЫ:", end = ' ')
-                self.search_words(file_name, "РАБОЧАЯ ПРОГРАММА ДИСЦИПЛИНЫ")
+#                self.firstly(file_name)
+                programm_discipline = self.search_words(file_name, "Направление подготовки")
+                self.addEdSt(programm_discipline, self.search_words(file_name, "Уровень высшего образования"))
 
-                print(f"Направление подготовки:", end = ' ')
-                self.search_words(file_name, "Направление подготовки")
+                discipline_name = self.search_words(file_name, "РАБОЧАЯ ПРОГРАММА ДИСЦИПЛИНЫ")
+                self.addDiscipline(discipline_name, self.find_number_before_word(file_name, "час"),self.find_column_text_below_cell(file_name, "раздел/тема дисциплины"))
 
-                print(f"Уровень высшего образования:", end = ' ')
-                self.search_words(file_name, "Уровень высшего образования")
+                for row_data in self.find_column_data_below_target(file_name, "Код компе-тенции"):
+                    self.addCompetence(row_data[0], row_data[1])
+                    self.addCompetenceDiscipline(row_data[0], discipline_name)
 
-                print(f"Направленность (профиль) образовательной программы:", end = ' ')
-                self.search_words(file_name, "Направленность (профиль) образовательной программы")
+                programm_discipline = programm_discipline[9:]
+                profile_discipline = self.search_words(file_name, "Направленность (профиль) образовательной программы")
+                self.addProfile(programm_discipline, profile_discipline, self.search_numb(file_name,"решением Ученого совета"))
 
-#                print(f"Направленность (профиль) образовательной программы:", end = ' ')
-#                self.find_word_after_target(file_name, "")
+                self.addDisciplineinProfile(profile_discipline, discipline_name, self.find_column_below_target(file_name, "Семестр"))
 
-                print(f"Код компе-тенции:", end = ' ')
-                self.find_column_data_below_target(file_name, "Код компе-тенции")
+                print(self.find_column_text_below_cell(file_name, "раздел/тема дисциплины"))
+#print(self.search_words(file_name, "РАБОЧАЯ ПРОГРАММА ДИСЦИПЛИНЫ"))
+#                print(self.search_words(file_name, "Направление подготовки"))
+#                print(self.search_words(file_name, "Уровень высшего образования"))
+#                print(self.search_words(file_name, "Направленность (профиль) образовательной программы"))
 
-                print(f"Количество часов:", end = ' ')
-                self.find_number_before_word(file_name, "час")
+#                for row_data in self.find_column_data_below_target(file_name, "Код компе-тенции"):
+#                    print(row_data[0], row_data[1], end = ' ')
+#                print(self.find_number_before_word(file_name, "час"))
 
     def find_number_before_word(self, doc_name, target_word):
         doc = Document(doc_name)
@@ -137,8 +277,26 @@ class MainWindow(QMainWindow):
             match = re.search(r'(\d+)\s+' + re.escape(target_word), paragraph.text)
             if match:
                 number = match.group(1)
-                print(f"{number}")
-                return
+                return number
+
+    def find_column_below_target(self, doc_name, target_word):
+        doc = Document(doc_name)
+        for table in doc.tables:
+            for row_index, row in enumerate(table.rows):
+                for cell_index, cell in enumerate(row.cells):
+                    if target_word in cell.text:
+                        # Найдена ячейка с словом "Семестр"
+                        # Проверяем, если это последний столбец таблицы
+                        if cell_index == len(row.cells) - 1:
+                            # Если это последний столбец, проверяем, есть ли следующая строка
+                            if row_index < len(table.rows) - 1:
+                                # Возвращаем текст ячейки ниже найденной ячейки
+                                return table.cell(row_index + 1, cell_index).text.strip()
+                        else:
+                            # Возвращаем текст ячейки в том же столбце следующей строки
+                            return table.cell(row_index + 1, cell_index).text.strip()
+        return None
+
 
     def search_words(self, doc_name, target_word):
         doc = Document(doc_name)
@@ -147,27 +305,32 @@ class MainWindow(QMainWindow):
         for paragraph in doc.paragraphs:
             if found_target:
                 if paragraph.text.strip():
-                    print(paragraph.text.strip())
-                    return
+                    return paragraph.text.strip()
             elif target_word in paragraph.text:
                 found_target = True
 
-#    def search_words(self, doc_name, target_word):
-#        doc = Document(doc_name)
-#        found = False
+    def search_numb(self, doc_name, start_phrase):
+        doc = Document(doc_name)
+        found_numbers = []
+        end_phrase = "г."
+        for paragraph in doc.paragraphs:
+            # Ищем вхождения начальной и конечной фразы в тексте абзаца
+            start_index = paragraph.text.find(start_phrase)
+            end_index = paragraph.text.find(end_phrase)
+            if start_index != -1 and end_index != -1:
+                # Используем регулярное выражение для поиска чисел между фразами
+                numbers_between_phrases = re.findall(r'\d+', paragraph.text[start_index:end_index])
+                # Если нашли числа, добавляем их в список найденных чисел
+                if numbers_between_phrases:
+                    found_numbers.extend(map(int, numbers_between_phrases))
 
-#        for table in doc.tables:
-#            for row in table.rows:
-#                for cell in row.cells:
-#                    # Ищем в первой ячейке
-#                    if target_word in cell.text.strip():
-#                        # Печатаем текст из второй ячейки
-#                        related_cell_text = row.cells[1].text.strip()
-#                        print(f"{related_cell_text}")
-#                        found = True
+        # Если были найдены числа между фразами, возвращаем последнее из них
+        if found_numbers:
+            return max(found_numbers)
+        else:
+            return None
 
-#        if not found:
-#            print(f"Слово '{target_word}' не найдено в документе.")
+
     def find_word_after_target(self, doc_name, target_word):
         doc = Document(doc_name)
         found_target = False
@@ -177,8 +340,7 @@ class MainWindow(QMainWindow):
                 words = paragraph.text.strip().split()
                 if words:
                     next_word = words[0]
-                    print(f"Найдено слово после строки с ключевым словом: {next_word}")
-                    return
+                    return next_word
             elif target_word in paragraph.text:
                 found_target = True
 
@@ -201,8 +363,28 @@ class MainWindow(QMainWindow):
             if found_target:
                 found_target = False
                 break
-        for row_data in target_row_data:
-            print(row_data[0], row_data[1], end = ' ')
+        return target_row_data
+
+    def find_column_text_below_cell(self, doc_name, cell_text):
+        column_text = []
+        doc = Document(doc_name)
+        for table in doc.tables:
+            for row in table.rows:
+
+                for cell_index, cell in enumerate(row.cells):
+                    # Проверяем, если текст ячейки соответствует искомому
+                    if cell_text in cell.text:
+                        # Определяем индекс столбца, в котором находится искомая ячейка
+                        column_index = cell_index
+
+                        # Собираем текст из всех ячеек этого столбца, начиная со следующей строки
+                        for i in range(row._index + 1, len(table.rows)):
+                            b = table.rows[i].cells[column_index].text.strip()
+                            if not(b in column_text):
+                                column_text.append(b)
+                        return str(' '.join(column_text))
+
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     widget = MainWindow()
