@@ -8,9 +8,13 @@ import mysql.connector as mc
 
 
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 #os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 os.environ['TF_USE_LEGACY_KERAS'] = '1'
+
+#import tensorflow as tf
+#tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -18,9 +22,10 @@ from matplotlib.figure import Figure
 from gensim.models import Word2Vec
 import networkx as nx
 import tf_keras as keras
-from tf_keras.models import load_model
-from tf_keras.utils import pad_sequences
-from tf_keras.models import Model
+
+from keras.models import load_model
+from keras.utils import pad_sequences
+from keras.models import Model
 import re
 from pymorphy2 import MorphAnalyzer
 import nltk
@@ -59,7 +64,11 @@ class GraphWindow(QDialog):
         G.add_edges_from(rel)
 
         self.figure.clear()
-        nx.draw(G, with_labels=True, node_color='lightblue', node_size=500, font_size=8, font_weight='bold')
+
+        pos = nx.spring_layout(G, scale=10)
+        ax = self.figure.add_subplot(frameon=False)
+        ax.margins(0.2)
+        nx.draw(G, ax=ax, pos=pos, with_labels=True, node_color='lightblue', node_size=500, font_size=6, font_weight='bold')  # Измените размер шрифта
         self.canvas.draw()
 
 class Result(QDialog):
@@ -106,11 +115,11 @@ class Result(QDialog):
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
 
         self.model = Model()
-        self.model = load_model('best_model_f1_main_embedding200.h5')
+        self.model = load_model('best_model_mse_main_embedding50.h5')
 #        self.model = tf.keras.models.load_model('saved_model/best_model_f1_main_embedding50')
         self.morph = MorphAnalyzer()
         self.model_vec = Word2Vec.load("updated_model")
-        nltk.download('stopwords')
+#        nltk.download('stopwords')
 
         self.mydb = mydb
         self.filter_combobox()

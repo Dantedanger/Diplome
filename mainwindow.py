@@ -3,8 +3,8 @@ import sys
 from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox, QMainWindow, QWidget, QLineEdit, QTextEdit, QTableWidget, QTableWidgetItem, QDialog
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QIODevice
-import mysql.connector as mc
 from docx import Document
+import mysql.connector as mc
 import re
 
 #     pyside6-uic D:\QtProjects\Diplom\form.ui -o D:\QtProjects\Diplom\ui_form.py
@@ -91,6 +91,7 @@ class MainWindow(QMainWindow):
                 password = "",
                 database = "09.03.04.database"
                 )
+#            mydb = sqlite3.connect('09_03_04_database_202404210022.sql')
             print(f'Connect')
             return mydb
         except mc.Error as e:
