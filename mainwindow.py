@@ -89,7 +89,8 @@ class MainWindow(QMainWindow):
                 host = "localhost",
                 user = "root",
                 password = "",
-                database = "09.03.04.database"
+                database = "09.03.04.database",
+                charset='utf8mb4'
                 )
 #            mydb = sqlite3.connect('09_03_04_database_202404210022.sql')
             print(f'Connect')

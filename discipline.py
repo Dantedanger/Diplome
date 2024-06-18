@@ -122,8 +122,9 @@ class Discipline(QDialog):
         # Сбор всех векторов слов в один массив
         all_word_vectors = [vector for vectors in text_word_vectors for vector in vectors]
         # Кластеризация всех векторов слов
-        text_cluster_counts = [np.bincount(self.kmeans.predict(vectors), minlength=2) for vectors in text_word_vectors]
-        classification_labels = ["Гуманитарная" if counts[0] > counts[1] else "Техническая" for counts in text_cluster_counts]
+
+        text_cluster_counts = [np.bincount(self.kmeans.predict(vectors), minlength=100) for vectors in text_word_vectors]
+        classification_labels = ["Техническая" if counts[0] > counts[1] else "Гуманитарная" for counts in text_cluster_counts]
                 # Вывод результата классификации
         for label in classification_labels:
             print("Text:", text)

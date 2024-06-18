@@ -8,11 +8,12 @@ import mysql.connector as mc
 
 
 import os
+sys.stdout.reconfigure(encoding='utf-8')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 #os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
-os.environ['TF_USE_LEGACY_KERAS'] = '1'
+#os.environ['TF_USE_LEGACY_KERAS'] = '1'
 
-#import tensorflow as tf
+import tensorflow as tf
 #tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 import numpy as np
@@ -21,11 +22,11 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from gensim.models import Word2Vec
 import networkx as nx
-import tf_keras as keras
+#import tf.keras as keras
 
-from keras.models import load_model
-from keras.utils import pad_sequences
-from keras.models import Model
+from tensorflow.keras.models import load_model
+from tensorflow.keras.utils import pad_sequences
+from tensorflow.keras.models import Model
 import re
 from pymorphy2 import MorphAnalyzer
 import nltk
@@ -33,6 +34,182 @@ from nltk.corpus import stopwords
 
 
 QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
+
+class Precision(tf.keras.metrics.Metric):
+    def __init__(self, name='precision',threshold=0.45,**kwargs):
+        super(Precision, self).__init__(name=name,**kwargs)
+        self.threshold = threshold
+        self.tp = self.add_weight(name='true_positives', initializer='zeros')
+        self.fp = self.add_weight(name='false_positives', initializer='zeros')
+
+    def update_state(self, y_true, y_pred, sample_weight=None):
+        y_pred = tf.cast(y_pred >= self.threshold, tf.float32)
+        y_true = tf.cast(y_true, tf.float32)
+
+        true_positives = tf.reduce_sum(y_true * y_pred)
+        false_positives = tf.reduce_sum(y_pred) - true_positives
+
+        self.tp.assign_add(true_positives)
+        self.fp.assign_add(false_positives)
+
+    def result(self):
+        precision = self.tp / (self.tp + self.fp + tf.keras.backend.epsilon())
+        return precision
+
+    def reset_state(self):
+        self.tp.assign(0)
+        self.fp.assign(0)
+
+class Recall(tf.keras.metrics.Metric):
+    def __init__(self, name='recall',threshold=0.45,**kwargs):
+        super(Recall, self).__init__(name=name,**kwargs)
+        self.threshold = threshold
+        self.tp = self.add_weight(name='true_positives', initializer='zeros')
+        self.fn = self.add_weight(name='false_negatives', initializer='zeros')
+
+    def update_state(self, y_true, y_pred, sample_weight=None):
+        y_pred = tf.cast(y_pred >= self.threshold, tf.float32)
+        y_true = tf.cast(y_true, tf.float32)
+
+        true_positives = tf.reduce_sum(y_true * y_pred)
+        false_negatives = tf.reduce_sum(y_true) - true_positives
+
+        self.tp.assign_add(true_positives)
+        self.fn.assign_add(false_negatives)
+
+    def result(self):
+        recall = self.tp / (self.tp + self.fn + tf.keras.backend.epsilon())
+        return recall
+
+    def reset_state(self):
+        self.tp.assign(0)
+        self.fn.assign(0)
+
+class ROCAUC(tf.keras.metrics.Metric):
+    def __init__(self, name='roc_auc', **kwargs):
+        super(ROCAUC, self).__init__(name=name, **kwargs)
+        self.auc_metric = tf.keras.metrics.AUC(name='auc')
+
+    def update_state(self, y_true, y_pred, sample_weight=None):
+        self.auc_metric.update_state(y_true, y_pred, sample_weight)
+
+    def result(self):
+        return self.auc_metric.result()
+
+    def reset_state(self):
+        self.auc_metric.reset_state()
+
+class Tp(tf.keras.metrics.Metric):
+    def __init__(self, name: str = 'true_positives', num_classes: int = 2, threshold: float = 0.45, **kwargs):
+        super(Tp, self).__init__(name=name, **kwargs)
+        self.threshold = threshold
+        self.num_classes = num_classes
+        self.tp = self.add_weight(name='tp', initializer='zeros')
+
+    def update_state(self, y_true: tf.Tensor, y_pred: tf.Tensor, sample_weight: tf.Tensor = None):
+        y_pred = tf.cast(y_pred >= self.threshold, tf.float32)
+        y_true = tf.cast(y_true, tf.float32)
+        true_positives = tf.reduce_sum(y_true * y_pred)
+        self.tp.assign_add(true_positives)
+
+    def result(self) -> tf.Tensor:
+        return self.tp
+
+    def reset_state(self):
+        self.tp.assign(0)
+
+
+class Fp(tf.keras.metrics.Metric):
+    def __init__(self, name: str = 'false_positives', num_classes: int = 2, threshold: float = 0.45, **kwargs):
+        super(Fp, self).__init__(name=name, **kwargs)
+        self.threshold = threshold
+        self.num_classes = num_classes
+        self.fp = self.add_weight(name='fp', initializer='zeros')
+
+    def update_state(self, y_true: tf.Tensor, y_pred: tf.Tensor, sample_weight: tf.Tensor = None):
+        y_pred = tf.cast(y_pred >= self.threshold, tf.float32)
+        y_true = tf.cast(y_true, tf.float32)
+        false_positives = tf.reduce_sum(y_pred * (1 - y_true))
+        self.fp.assign_add(false_positives)
+
+    def result(self) -> tf.Tensor:
+        return self.fp
+
+    def reset_state(self):
+        self.fp.assign(0)
+
+
+class Fn(tf.keras.metrics.Metric):
+    def __init__(self, name: str = 'false_negatives', num_classes: int = 2, threshold: float = 0.45, **kwargs):
+        super(Fn, self).__init__(name=name, **kwargs)
+        self.threshold = threshold
+        self.num_classes = num_classes
+        self.fn = self.add_weight(name='fn', initializer='zeros')
+
+    def update_state(self, y_true: tf.Tensor, y_pred: tf.Tensor, sample_weight: tf.Tensor = None):
+        y_pred = tf.cast(y_pred >= self.threshold, tf.float32)
+        y_true = tf.cast(y_true, tf.float32)
+        false_negatives = tf.reduce_sum((1 - y_pred) * y_true)
+        self.fn.assign_add(false_negatives)
+
+    def result(self) -> tf.Tensor:
+        return self.fn
+
+    def reset_state(self):
+        self.fn.assign(0)
+
+
+
+class Tn(tf.keras.metrics.Metric):
+    def __init__(self, name: str = 'true_negatives', num_classes: int = 2, threshold: float = 0.45, **kwargs):
+        super(Tn, self).__init__(name=name, **kwargs)
+        self.threshold = threshold
+        self.num_classes = num_classes
+        self.tn = self.add_weight(name='tn', initializer='zeros')
+
+    def update_state(self, y_true: tf.Tensor, y_pred: tf.Tensor, sample_weight: tf.Tensor = None):
+        y_pred = tf.cast(y_pred >= self.threshold, tf.float32)
+        y_true = tf.cast(y_true, tf.float32)
+
+        true_negatives = tf.reduce_sum((1 - y_true) * (1 - y_pred))
+        self.tn.assign_add(true_negatives)
+
+    def result(self) -> tf.Tensor:
+        return self.tn
+
+    def reset_state(self):
+        self.tn.assign(0)
+
+class F1Score(tf.keras.metrics.Metric):
+    def __init__(self, name='f1_score', threshold=0.45, **kwargs):
+        super(F1Score, self).__init__(name=name, **kwargs)
+        self.threshold = threshold
+        self.tp = self.add_weight(name='true_positives', initializer='zeros')
+        self.fp = self.add_weight(name='false_positives', initializer='zeros')
+        self.fn = self.add_weight(name='false_negatives', initializer='zeros')
+
+    def update_state(self, y_true, y_pred, sample_weight=None):
+        y_pred = tf.cast(y_pred >= self.threshold, tf.float32)
+        y_true = tf.cast(y_true, tf.float32)
+
+        true_positives = tf.reduce_sum(y_true * y_pred)
+        false_positives = tf.reduce_sum(y_pred) - true_positives
+        false_negatives = tf.reduce_sum(y_true) - true_positives
+
+        self.tp.assign_add(true_positives)
+        self.fp.assign_add(false_positives)
+        self.fn.assign_add(false_negatives)
+
+    def result(self):
+        precision = self.tp / (self.tp + self.fp + tf.keras.backend.epsilon())
+        recall = self.tp / (self.tp + self.fn + tf.keras.backend.epsilon())
+        f1 = 2 * (precision * recall) / (precision + recall + tf.keras.backend.epsilon())
+        return f1
+
+    def reset_state(self):
+        self.tp.assign(0)
+        self.fp.assign(0)
+        self.fn.assign(0)
 
 class GraphWindow(QDialog):
     def __init__(self):
@@ -115,7 +292,9 @@ class Result(QDialog):
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
 
         self.model = Model()
-        self.model = load_model('best_model_mse_main_embedding50.h5')
+        self.model = load_model('best_model_f1.keras',
+        custom_objects={'F1Score': F1Score,'ROCAUC': ROCAUC,'Precision': Precision, 'Recall': Recall,
+                        'Tp': Tp,'Fp': Fp,'Tn': Tn, 'Fn': Fn})
 #        self.model = tf.keras.models.load_model('saved_model/best_model_f1_main_embedding50')
         self.morph = MorphAnalyzer()
         self.model_vec = Word2Vec.load("updated_model")
@@ -261,7 +440,7 @@ class Result(QDialog):
         return tokens
 
     def semanticRelations(self, desc1, desc2):
-        max_text_len = 100
+        max_text_len = 300
 
         new_new_main_text = self.lemmatize(desc1)
         new_new_related_text = self.lemmatize(desc2)
@@ -283,7 +462,7 @@ class Result(QDialog):
         new_X = [new_padded_main_sequence, new_padded_related_sequence]
         prediction = self.model.predict(new_X)
 
-        predicted_label = "1" if prediction[0][0] >= 0.4 else "0"
+        predicted_label = "1" if prediction[0][0] >= 0.45 else "0"
         return predicted_label, prediction[0][0]
 #        print("", desc1, desc2, predicted_label, prediction[0][0])
 
